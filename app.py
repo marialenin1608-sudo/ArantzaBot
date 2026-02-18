@@ -9,7 +9,7 @@ GEMINI_KEY = os.environ.get('GEMINI_API_KEY')
 
 genai.configure(api_key=GEMINI_KEY)
 model = genai.GenerativeModel('gemini-1.5-flash')
-bot = telebot.TeleBot(TOKEN, threaded=False) # Cambio técnico para estabilidad
+bot = telebot.TeleBot(TOKEN, threaded=False)
 
 app = Flask(__name__)
 
