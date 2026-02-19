@@ -1,18 +1,26 @@
 import os
 import telebot
 import google.generativeai as genai
+from flask import Flask
+import threading
 
-# Usamos los nombres exactos que configuramos en Render
+# 1. Configuración de credenciales (Nombres exactos de Render)
 TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN') 
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
 
-# Configuración de IA
+# 2. Inicialización
 genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel('gemini-1.5-flash')
-
-# ACTIVACIÓN DEL BOT (Sin hilos para evitar el Error 409)
 bot = telebot.TeleBot(TELEGRAM_TOKEN, threaded=False)
 
+# 3. Servidor Web para que Render esté feliz
+app = Flask(__name__)
+
+@app.route('/')
+def health_check():
+    return "Bot de Xyon Group activo", 200
+
+# 4. Lógica del Bot
 @bot.message_handler(func=lambda message: True)
 def handle_message(message):
     try:
@@ -21,6 +29,16 @@ def handle_message(message):
     except Exception as e:
         print(f"Error Gemini: {e}")
 
-if __name__ == "__main__":
-    print(">>> ArantzaBot2 iniciando conexión única...")
+def run_bot():
+    print(">>> Bot escuchando mensajes...")
     bot.infinity_polling()
+
+if __name__ == "__main__":
+    # Arrancar el bot en un hilo separado
+    t = threading.Thread(target=run_bot)
+    t.daemon = True
+    t.start()
+    
+    # Arrancar Flask en el puerto que Render exige
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host='0.0.0.0', port=port)
